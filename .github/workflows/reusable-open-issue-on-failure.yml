@@ -9,7 +9,6 @@ permissions:
 jobs:
   open-issue:
     permissions:
-      contents: read
       issues: write # for creating the issue
     runs-on: ubuntu-latest
     steps:
