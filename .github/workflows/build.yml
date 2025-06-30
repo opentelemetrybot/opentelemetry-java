@@ -163,6 +163,8 @@ jobs:
   build-graal:
     name: Build GraalVM
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # for graalvm/setup-graalvm to download GraalVM releases
     strategy:
       fail-fast: false
       matrix:
