@@ -4,10 +4,9 @@ on:
   # pull_request_target is used instead of pull_request so that the workflow has write access
   # (to post comments) even when triggered by fork PRs.
   #
-  # SECURITY: this workflow must never checkout or execute any code from the PR branch.
-  # Doing so would allow malicious PRs to exfiltrate secrets. All we use from the PR
-  # is github.event.pull_request.number (an integer) and author metadata, which are safe.
-  pull_request_target:
+  # Required to comment on merged fork PRs; no PR code is checked out, and
+  # PR author metadata is passed through env and treated only as quoted data.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [closed]
 
 permissions: {}
@@ -27,13 +26,11 @@ jobs:
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-issues: write
+          permission-members: read
 
       - name: Add survey comment if author is not a member or bot
         run: |
-          USERNAME="${{ github.event.pull_request.user.login }}"
-          USER_TYPE="${{ github.event.pull_request.user.type }}"
-          ORG="${{ github.repository_owner }}"
-          
           # Skip if user is a bot
           if [[ "$USER_TYPE" == "Bot" ]]; then
             echo "Skipping survey for bot user: $USERNAME"
@@ -51,3 +48,6 @@ jobs:
           gh pr comment ${PR_NUM} --repo ${{ github.repository }} --body "Thank you for your contribution @${USERNAME}! 🎉 We would like to hear from you about your experience contributing to OpenTelemetry by taking a few minutes to fill out this [survey](${SURVEY_URL})."
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          USERNAME: ${{ github.event.pull_request.user.login }}
+          USER_TYPE: ${{ github.event.pull_request.user.type }}
